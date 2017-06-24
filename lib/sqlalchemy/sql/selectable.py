@@ -2759,8 +2759,7 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
 
         GenerativeSelect.__init__(self, **kwargs)
 
-    @property
-    def _froms(self):
+    def _froms_impl(self, *from_iterables):
         # would love to cache this,
         # but there's just enough edge cases, particularly now that
         # declarative encourages construction of SQL expressions
@@ -2769,12 +2768,7 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         seen = set()
         translate = self._from_cloned
 
-        for item in itertools.chain(
-            _from_objects(*self._raw_columns),
-            _from_objects(self._whereclause)
-            if self._whereclause is not None else (),
-            self._from_obj
-        ):
+        for item in itertools.chain(*from_iterables):
             if item is self:
                 raise exc.InvalidRequestError(
                     "select() construct refers to itself as a FROM")
@@ -2786,6 +2780,30 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
 
         return froms
 
+    @property
+    def _froms(self):
+        return self._froms_impl(
+            _from_objects(*self._raw_columns),
+            _from_objects(self._whereclause)
+            if self._whereclause is not None else (),
+            self._from_obj)
+    
+    @property
+    def _display_froms(self):
+        if len(self._from_obj) == 0:
+            column_froms = set(_from_objects(*self._raw_columns))
+            if len(column_froms) == 1:
+                # If the caller didn't specify any FROM entities, and
+                # they only seem to be selecting columns from one
+                # table, then it is very likely they expect the one
+                # table to be selected from.  We could eliminate this
+                # case (as it goes against the spirit of mandating
+                # explicit FROMs) if we eliminated the various uses of
+                # Session.query(some_column).
+                return self._froms_impl(column_froms)
+        # Only use FROM entities the caller explicitly requested.
+        return self._froms_impl(self._from_obj)
+
     def _get_display_froms(self, explicit_correlate_froms=None,
                            implicit_correlate_froms=None):
         """Return the full list of 'from' clauses to be displayed.
@@ -2796,7 +2814,7 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         correlating.
 
         """
-        froms = self._froms
+        froms = self._display_froms
 
         toremove = set(itertools.chain(*[
             _expand_cloned(f._hide_froms)
