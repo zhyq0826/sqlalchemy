@@ -50,8 +50,7 @@ on the URL, or as keyword arguments to :func:`.create_engine()` are:
 * ``exclude_setinputsizes`` - a tuple or list of string DBAPI type names to
   be excluded from the "auto setinputsizes" feature.  The type names here
   must match DBAPI types that are found in the "cx_Oracle" module namespace,
-  such as cx_Oracle.UNICODE, cx_Oracle.NCLOB, etc.   Defaults to
-  ``(STRING, UNICODE)``.
+  such as cx_Oracle.NCHAR, cx_Oracle.NCLOB, etc.   Defaults to ``()``.
 
   .. versionadded:: 0.8 specific DBAPI types can be excluded from the
      auto_setinputsizes feature via the exclude_setinputsizes attribute.
@@ -95,7 +94,7 @@ Python 2:
   the advantage that the unicode conversion is global to all statements
   at the cx_Oracle driver level, meaning it works with raw textual SQL
   statements that have no typing information associated.  However, this system
-  has been observed to incur signfiicant performance overhead, not only
+  has been observed to incur significant performance overhead, not only
   because it takes effect for all string values unconditionally, but also
   because cx_Oracle under Python 2 seems to use a pure-Python function call in
   order to do the decode operation, which under cPython can orders of
@@ -373,7 +372,7 @@ class _OracleChar(_NativeUnicodeMixin, sqltypes.CHAR):
 
 class _OracleNVarChar(_NativeUnicodeMixin, sqltypes.NVARCHAR):
     def get_dbapi_type(self, dbapi):
-        return getattr(dbapi, 'UNICODE', dbapi.STRING)
+        return dbapi.NCHAR
 
 
 class _OracleText(_LOBMixin, sqltypes.Text):
@@ -496,9 +495,9 @@ class OracleExecutionContext_cx_oracle(OracleExecutionContext):
                     del param[fromname]
 
         if self.dialect.auto_setinputsizes:
-            # cx_oracle really has issues when you setinputsizes
-            # on String, including that outparams/RETURNING
-            # breaks for varchars
+            # setinputsizes for all datatypes.
+            # previously, we had problems with String but these seem
+            # to not be present.
             self.set_input_sizes(
                 quoted_bind_names,
                 exclude_types=self.dialect.exclude_setinputsizes
@@ -666,7 +665,7 @@ class OracleDialect_cx_oracle(OracleDialect):
 
     def __init__(self,
                  auto_setinputsizes=True,
-                 exclude_setinputsizes=("STRING", "UNICODE"),
+                 exclude_setinputsizes=(),
                  auto_convert_lobs=True,
                  threaded=True,
                  allow_twophase=True,
@@ -696,9 +695,6 @@ class OracleDialect_cx_oracle(OracleDialect):
             ).difference([None])
 
         self.exclude_setinputsizes = types(*(exclude_setinputsizes or ()))
-        self._cx_oracle_string_types = types("STRING", "UNICODE",
-                                             "NCLOB", "CLOB")
-        self._cx_oracle_unicode_types = types("UNICODE", "NCLOB")
         self._cx_oracle_binary_types = types("BFILE", "CLOB", "NCLOB", "BLOB")
         self.supports_unicode_binds = self.cx_oracle_ver >= (5, 0)
 
@@ -720,7 +716,6 @@ class OracleDialect_cx_oracle(OracleDialect):
 
         if self.cx_oracle_ver is None:
             # this occurs in tests with mock DBAPIs
-            self._cx_oracle_string_types = set()
             self._cx_oracle_with_unicode = False
         elif util.py3k or (
                 self.cx_oracle_ver >= (5,) and
