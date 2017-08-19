@@ -14,6 +14,7 @@ from sqlalchemy.dialects.mysql import reflection as _reflection
 from sqlalchemy.testing import fixtures, AssertsExecutionResults
 from sqlalchemy import testing
 from sqlalchemy.testing import assert_raises_message, expect_warnings
+import re
 
 
 class TypeReflectionTest(fixtures.TestBase):
@@ -233,9 +234,9 @@ class ReflectionTest(fixtures.TestBase, AssertsExecutionResults):
         assert reflected.c.c5.default is None
         assert reflected.c.c5.server_default is None
         assert reflected.c.c6.default is None
-        eq_(
-            str(reflected.c.c6.server_default.arg).upper(),
-            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        assert re.match(
+            r"CURRENT_TIMESTAMP(\(\))? ON UPDATE CURRENT_TIMESTAMP(\(\))?",
+            str(reflected.c.c6.server_default.arg).upper()
         )
         reflected.create()
         try:
@@ -251,9 +252,9 @@ class ReflectionTest(fixtures.TestBase, AssertsExecutionResults):
         assert reflected.c.c5.default is None
         assert reflected.c.c5.server_default is None
         assert reflected.c.c6.default is None
-        eq_(
-            str(reflected.c.c6.server_default.arg).upper(),
-            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        assert re.match(
+            r"CURRENT_TIMESTAMP(\(\))? ON UPDATE CURRENT_TIMESTAMP(\(\))?",
+            str(reflected.c.c6.server_default.arg).upper()
         )
 
     def test_reflection_with_table_options(self):
