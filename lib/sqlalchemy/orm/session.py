@@ -6,6 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 """Provides the Session class and related utilities."""
 
+import logging
 
 import weakref
 from .. import util, sql, engine, exc as sa_exc
@@ -537,6 +538,7 @@ class SessionTransaction(object):
 
 
     def close(self, invalidate=False):
+        logging.debug('close transaction')
         self.session.transaction = self._parent
         if self._parent is None:
             for connection, transaction, autoclose in \
@@ -1202,6 +1204,7 @@ class Session(_SessionClassMethods):
         not use any connection resources until they are first needed.
 
         """
+        logging.debug('close session')
         self._close_impl(invalidate=False)
 
     def invalidate(self):

@@ -146,3 +146,15 @@ def __go(lcls):
 
     _sa_util.dependencies.resolve_all("sqlalchemy")
 __go(locals())
+
+
+import logging
+
+_formatter = logging.Formatter(
+    '%(levelname)s:%(asctime)s %(module)s:%(lineno)d:%(funcName)s %(message)s')
+
+ch = logging.StreamHandler()
+ch.setFormatter(_formatter)
+logger = logging.root
+logger.addHandler(ch)
+logger.setLevel(logging.DEBUG)
