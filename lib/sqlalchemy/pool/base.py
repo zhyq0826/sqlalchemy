@@ -10,6 +10,8 @@
 
 """
 
+import logging
+
 from collections import deque
 import time
 import weakref
@@ -481,6 +483,7 @@ class _ConnectionRecord(object):
 
     @classmethod
     def checkout(cls, pool):
+        logging.debug('real MySQL connection from dbapi')
         rec = pool._do_get()
         try:
             dbapi_connection = rec.get_connection()
@@ -601,11 +604,15 @@ class _ConnectionRecord(object):
             )
             recycle = True
 
+
+        logging.debug('pool is recycle %s, old connection is %s' % (recycle, self.connection))
         if recycle:
             self.__close()
             self.info.clear()
 
             self.__connect()
+            logging.debug('pool is recycle %s, new connection is %s' % (recycle, self.connection))
+
         return self.connection
 
     def __close(self):

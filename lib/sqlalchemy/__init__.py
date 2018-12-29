@@ -151,7 +151,7 @@ __go(locals())
 import logging
 
 _formatter = logging.Formatter(
-    '%(levelname)s:%(asctime)s %(module)s:%(lineno)d:%(funcName)s %(message)s')
+    '%(levelname)s:%(asctime)s %(module)s:%(lineno)d:%(funcName)s => %(message)s')
 
 ch = logging.StreamHandler()
 ch.setFormatter(_formatter)

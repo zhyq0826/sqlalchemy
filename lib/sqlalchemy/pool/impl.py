@@ -10,6 +10,8 @@
 
 """
 
+import logging
+
 import traceback
 import weakref
 
@@ -84,6 +86,8 @@ class QueuePool(Pool):
           :class:`.Pool` constructor.
 
         """
+        logging.debug('pool init pool_size %s' % pool_size)
+        logging.debug('pool init max_overflow %s' % max_overflow)
         Pool.__init__(self, creator, **kw)
         self._pool = sqla_queue.Queue(pool_size, use_lifo=use_lifo)
         self._overflow = 0 - pool_size
@@ -92,6 +96,7 @@ class QueuePool(Pool):
         self._overflow_lock = threading.Lock()
 
     def _do_return_conn(self, conn):
+        logging.debug('pool size is %s' % self._pool.qsize())
         try:
             self._pool.put(conn, False)
         except sqla_queue.Full:
@@ -102,7 +107,7 @@ class QueuePool(Pool):
 
     def _do_get(self):
         use_overflow = self._max_overflow > -1
-
+        logging.debug('pool size is %s' % self._pool.qsize())
         try:
             wait = use_overflow and self._overflow >= self._max_overflow
             return self._pool.get(wait, self._timeout)
