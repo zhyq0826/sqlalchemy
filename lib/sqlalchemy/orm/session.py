@@ -1049,6 +1049,7 @@ class Session(_SessionClassMethods):
 
     def _connection_for_bind(self, engine, execution_options=None, **kw):
         if self.transaction is not None:
+            logging.debug('%s' % self.__class__)
             return self.transaction._connection_for_bind(
                 engine, execution_options)
         else:
@@ -1183,6 +1184,7 @@ class Session(_SessionClassMethods):
         clause = expression._literal_as_text(clause)
 
         if bind is None:
+            logging.debug('%s session create new connection' % self.__class__)
             bind = self.get_bind(mapper, clause=clause, **kw)
 
         return self._connection_for_bind(

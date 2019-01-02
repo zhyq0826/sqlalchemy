@@ -18,6 +18,7 @@ condition.
 
 """
 
+import logging
 from collections import deque
 from time import time as _time
 from .compat import threading
@@ -142,6 +143,7 @@ class Queue:
         return an item if one is immediately available, else raise the
         ``Empty`` exception (`timeout` is ignored in that case).
         """
+        logging.debug("%s called" % self.__class__)
         self.not_empty.acquire()
         try:
             if not block:

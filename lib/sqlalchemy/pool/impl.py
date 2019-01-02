@@ -107,7 +107,7 @@ class QueuePool(Pool):
 
     def _do_get(self):
         use_overflow = self._max_overflow > -1
-        logging.debug('pool size is %s' % self._pool.qsize())
+        logging.debug('%s called pool size is %s' % (self.__class__, self._pool.qsize()))
         try:
             wait = use_overflow and self._overflow >= self._max_overflow
             return self._pool.get(wait, self._timeout)

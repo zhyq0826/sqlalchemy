@@ -10,6 +10,7 @@ from __future__ import with_statement
 
 """
 
+import logging
 
 import sys
 from .. import exc, util, log, interfaces
@@ -125,6 +126,7 @@ class Connection(Connectable):
         connected when a close() event occurs.
 
         """
+        logging.debug('%s' % self.__class__)
         if self.__branch_from:
             return self.__branch_from._branch()
         else:

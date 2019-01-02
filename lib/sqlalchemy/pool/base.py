@@ -353,6 +353,7 @@ class Pool(log.Identified):
         the pool.
 
         """
+        logging.debug("%s connect called" % self.__class__)
         if not self._use_threadlocal:
             return _ConnectionFairy._checkout(self)
 
@@ -483,7 +484,7 @@ class _ConnectionRecord(object):
 
     @classmethod
     def checkout(cls, pool):
-        logging.debug('real MySQL connection from dbapi')
+        logging.debug('%s checkout called' % cls)
         rec = pool._do_get()
         try:
             dbapi_connection = rec.get_connection()
@@ -605,13 +606,13 @@ class _ConnectionRecord(object):
             recycle = True
 
 
-        logging.debug('pool is recycle %s, old connection is %s' % (recycle, self.connection))
+        logging.debug('%s pool is recycle %s, old connection is %s' % (self.__class__, recycle, self.connection))
         if recycle:
             self.__close()
             self.info.clear()
 
             self.__connect()
-            logging.debug('pool is recycle %s, new connection is %s' % (recycle, self.connection))
+            logging.debug('%s pool is recycle %s, new connection is %s' % (self.__class__, recycle, self.connection))
 
         return self.connection
 
